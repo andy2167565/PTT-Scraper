@@ -11,6 +11,7 @@ import csv
 from pytube import YouTube
 
 PTT_URL = 'https://www.ptt.cc'
+base64_table = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'
 script_path = os.path.dirname(os.path.abspath(__file__))
 
 with open(os.path.join(script_path, 'configFile', 'config.txt'), encoding='utf-8') as f:
@@ -63,7 +64,7 @@ def get_web_page(url):
 
 
 # Retrieve article info and append to list
-def add_article_data(articles, d, href, dt, code1, code2):
+def add_article_data(articles, d, href, dt, code1, code2, article_code):
     title = d.find('a').text
     author = d.find('div', 'author').text if d.find('div', 'author') else ''
     
@@ -88,9 +89,22 @@ def add_article_data(articles, d, href, dt, code1, code2):
         'author': author,
         'dt': dt.strftime('%Y/%m/%d %H:%M:%S'),
         'code1': code1,
-        'code2': code2
+        'code2': code2,
+        'article_code': article_code
     })
     return articles
+
+
+# Convert to base64
+def base64(n, carry):
+    # Decimal to binary
+    if carry == 'decimal':
+        s = bin(n)[2:][::-1]
+    # Hexadecimal to binary
+    elif carry == 'hexadecimal':
+        s = bin(int(n, 16))[2:][::-1]
+    # Binary to base64
+    return ''.join([base64_table[int(s[i:i+6][::-1], 2)] for i in range(0, len(s), 6)][::-1])
 
 
 # Get article URLs and URL of previous page from index page
@@ -111,12 +125,13 @@ def get_articles(dom, start_date):
             href = d.find('a')['href']
             code1 = href.split('.')[-4]
             code2 = href.split('.')[-2]
+            article_code = base64(int(code1), 'decimal') + base64(code2, 'hexadecimal')
             dt = datetime.fromtimestamp(int(code1))  # code1 represents posting timestamp
             # Ignore the article if it is posted before start_date
             if start_date and dt < start_date:
                 continue
             else:
-                articles = add_article_data(articles, d, href, dt, code1, code2)
+                articles = add_article_data(articles, d, href, dt, code1, code2, article_code)
     return articles, prev_url
 
 
@@ -250,7 +265,7 @@ def main():
         print('Start crawling articles...')
         current_articles, prev_url = get_articles(current_page, start_date)
         
-        header = ['Title', 'Author', 'DateTime', 'PushCount', 'IP', 'Country', 'URL', 'Code1', 'Code2']
+        header = ['Title', 'Author', 'DateTime', 'PushCount', 'IP', 'Country', 'URL', 'TimeStamp', 'RandomCode', 'ArticleCode']
         article_df = pd.DataFrame(columns=header)
         invalid_header = ['Title', 'Author', 'DateTime', 'URL']
         invalid_df = pd.DataFrame(columns=invalid_header)
@@ -281,7 +296,7 @@ def main():
                     _, country = get_country_ipstack(ip)
                     
                     # Save article info to DataFrame
-                    article_df.loc[article_count] = [article['title'], article['author'], article['dt'], article['push_count'], ip, country, PTT_URL+article['href'], article['code1'], '"'+article['code2']+'"']
+                    article_df.loc[article_count] = [article['title'], article['author'], article['dt'], article['push_count'], ip, country, PTT_URL+article['href'], article['code1'], '"'+article['code2']+'"', article['article_code']]
                     article_count += 1
                     
                     # Save contents and messages to text file
