@@ -10,5 +10,7 @@ start_date=yyyy-mm-dd
 end_date=yyyy-mm-dd
 # keyword is used for searching title
 keyword=<YOUR_KEYWORD>
+# Search for articles published by specified author
+author_ID=<YOUR_AUTHOR_ID>
 
 #Comment out undesired parameters by adding a '#' to the beginning of the line
