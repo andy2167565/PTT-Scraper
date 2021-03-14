@@ -36,6 +36,11 @@ try:
 except:
     keyword = None
 
+try:
+    author_ID = config['author_ID']
+except:
+    author_ID = None
+
 API_KEY = config['API_KEY']
 
 today_datetime = datetime.today().strftime('%Y%m%d-%H%M%S')
@@ -64,9 +69,8 @@ def get_web_page(url):
 
 
 # Retrieve article info and append to list
-def add_article_data(articles, d, href, dt, code1, code2, article_code):
+def add_article_data(articles, d, href, dt, code1, code2, article_code, author):
     title = d.find('a').text
-    author = d.find('div', 'author').text if d.find('div', 'author') else ''
     
     push_count = 0
     push_str = d.find('div', 'nrec').text
@@ -131,7 +135,12 @@ def get_articles(dom, start_date):
             if start_date and dt < start_date:
                 continue
             else:
-                articles = add_article_data(articles, d, href, dt, code1, code2, article_code)
+                author = d.find('div', 'author').text if d.find('div', 'author') else ''
+                # Ignore the article if author is not the specified one
+                if author_ID and author != author_ID:
+                    continue
+                else:
+                    articles = add_article_data(articles, d, href, dt, code1, code2, article_code, author)
     return articles, prev_url
 
 
@@ -272,7 +281,7 @@ def main():
         
         article_count = 0
         invalid_count = 0
-        while current_articles:
+        while current_articles or prev_url:
             for article in current_articles:
                 # Ignore the article if it is posted after end_date
                 if end_date and datetime.strptime(article['dt'], '%Y/%m/%d %H:%M:%S') > end_date:
