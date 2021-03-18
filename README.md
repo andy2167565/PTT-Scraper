@@ -30,3 +30,5 @@ pip install -r requirements.txt
 ```
 python ptt_scraper.py
 ```
+***
+Copyright © 2021 [Andy Lin](https://github.com/andy2167565). All rights reserved.
