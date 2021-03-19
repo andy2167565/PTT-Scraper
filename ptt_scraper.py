@@ -68,37 +68,6 @@ def get_web_page(url):
         return resp.text
 
 
-# Retrieve article info and append to list
-def add_article_data(articles, d, href, dt, code1, code2, article_code, author):
-    title = d.find('a').text
-    
-    push_count = 0
-    push_str = d.find('div', 'nrec').text
-    if push_str:
-        try:
-            push_count = int(push_str)
-        except ValueError:
-            if push_str == '爆':
-                push_count = 100
-            elif push_str.startswith('X'):
-                if push_str == 'XX':
-                    push_count = -100
-                else:
-                    push_count = -10 * int(push_str[1:])
-
-    articles.append({
-        'title': title,
-        'href': href,
-        'push_count': push_count,
-        'author': author,
-        'dt': dt.strftime('%Y/%m/%d %H:%M:%S'),
-        'code1': code1,
-        'code2': code2,
-        'article_code': article_code
-    })
-    return articles
-
-
 # Convert to base64
 def base64(n, carry):
     # Decimal to binary
@@ -111,10 +80,10 @@ def base64(n, carry):
     return ''.join([base64_table[int(s[i:i+6][::-1], 2)] for i in range(0, len(s), 6)][::-1])
 
 
-# Get article URLs and URL of previous page from index page
+# Get article URLs and basic info from index page
 def get_articles(dom, start_date):
     soup = BeautifulSoup(dom, 'html5lib')
-    
+
     try:
         paging_div = soup.find('div', 'btn-group btn-group-paging')
         prev_url = paging_div.find_all('a')[1]['href']
@@ -123,14 +92,15 @@ def get_articles(dom, start_date):
 
     articles = []
     divs = soup.find_all('div', 'r-ent')
-    
+
     for d in divs:
         if d.find('a'):  # Deleted article will not be collected
             href = d.find('a')['href']
             code1 = href.split('.')[-4]
             code2 = href.split('.')[-2]
             article_code = base64(int(code1), 'decimal') + base64(code2, 'hexadecimal')
-            dt = datetime.fromtimestamp(int(code1))  # code1 represents posting timestamp
+            # code1 represents posting timestamp
+            dt = datetime.fromtimestamp(int(code1))
             # Ignore the article if it is posted before start_date
             if start_date and dt < start_date:
                 continue
@@ -140,7 +110,16 @@ def get_articles(dom, start_date):
                 if author_ID and author != author_ID:
                     continue
                 else:
-                    articles = add_article_data(articles, d, href, dt, code1, code2, article_code, author)
+                    title = d.find('a').text
+                    articles.append({
+                        'title': title,
+                        'href': href,
+                        'author': author,
+                        'dt': dt.strftime('%Y/%m/%d %H:%M:%S'),
+                        'code1': code1,
+                        'code2': code2,
+                        'article_code': article_code
+                    })
     return articles, prev_url
 
 
@@ -184,7 +163,7 @@ def save(img_urls, img_urls_2, img_urls_3, img_urls_4, title):
             filepath = os.path.join(image_path, dname)
             if not os.path.exists(filepath):
                 os.makedirs(filepath)
-            
+
             # Modify image URLs to download images
             for img_url in img_urls:
                 if img_url.split('/')[-2] == 'a':
@@ -235,7 +214,7 @@ def save(img_urls, img_urls_2, img_urls_3, img_urls_4, title):
                 count += 1
         except Exception as e:
             print(e)
-    
+
     if img_urls_4:
         try:
             dname = title.strip()
@@ -266,19 +245,21 @@ def main():
     start_time = datetime.now()
     # Get HTML of index page
     if keyword:
-        current_page = get_web_page(PTT_URL + '/bbs/' + board_name + '/search?q=' + keyword)  # Search for keyword first if specified
+        # Search for keyword first if specified
+        current_page = get_web_page(PTT_URL + '/bbs/' + board_name + '/search?q=' + keyword)
     else:
         current_page = get_web_page(PTT_URL + '/bbs/' + board_name + '/index.html')
 
     if current_page:
         print('Start crawling articles...')
         current_articles, prev_url = get_articles(current_page, start_date)
-        
-        header = ['Title', 'Author', 'DateTime', 'PushCount', 'IP', 'Country', 'URL', 'TimeStamp', 'RandomCode', 'ArticleCode']
+
+        header = ['Title', 'Author', 'DateTime', 'IP', 'Country', 'URL', 'TimeStamp',
+                  'RandomCode', 'ArticleCode', 'UpvoteCount', 'NeutralCount', 'DownvoteCount']
         article_df = pd.DataFrame(columns=header)
         invalid_header = ['Title', 'Author', 'DateTime', 'URL']
         invalid_df = pd.DataFrame(columns=invalid_header)
-        
+
         article_count = 0
         invalid_count = 0
         while current_articles or prev_url:
@@ -286,13 +267,13 @@ def main():
                 # Ignore the article if it is posted after end_date
                 if end_date and datetime.strptime(article['dt'], '%Y/%m/%d %H:%M:%S') > end_date:
                     continue
-                
+
                 page = get_web_page(PTT_URL + article['href'])
                 if page:
                     soup = BeautifulSoup(page, 'html.parser')
-                    
+
                     print('Crawling:', article['title'])
-                    
+
                     # Get IP
                     pattern = '來自: \d+\.\d+\.\d+\.\d+'
                     match = re.search(pattern, page)
@@ -300,20 +281,31 @@ def main():
                         ip = match.group(0).replace('來自: ', '')
                     else:
                         ip = None
-                    
+
                     # Get IP country
                     _, country = get_country_ipstack(ip)
-                    
+
+                    # Get upvote, downvote and neutral count
+                    neutral_count = 0
+                    downvote_count = 0
+                    upvote_count = len(soup.find_all('span', {'class': 'hl push-tag'}))
+                    for message in soup.find_all('span', {'class': 'f1 hl push-tag'}):
+                        if message.text.strip() == '→':
+                            neutral_count += 1
+                        elif message.text.strip() == '噓':
+                            downvote_count += 1
+
                     # Save article info to DataFrame
-                    article_df.loc[article_count] = [article['title'], article['author'], article['dt'], article['push_count'], ip, country, PTT_URL+article['href'], article['code1'], '"'+article['code2']+'"', article['article_code']]
+                    article_df.loc[article_count] = [article['title'], article['author'], article['dt'], ip, country, PTT_URL+article['href'],
+                                                     article['code1'], '"'+article['code2']+'"', article['article_code'], upvote_count, neutral_count, downvote_count]
                     article_count += 1
-                    
+
                     # Save contents and messages to text file
                     all_text = soup.find(id='main-content').text
                     content = '\n'.join(list(filter(None, all_text.split('\n')[1:])))
                     with open(os.path.join(content_path, article['code1']+'_'+article['code2']+'.txt'), 'w', encoding='utf-8') as text:
                         text.write(content)
-                    
+
                     # Get image URLs and save
                     img_urls, img_urls_2, img_urls_3, img_urls_4 = parse(soup)
                     save(img_urls, img_urls_2, img_urls_3, img_urls_4, str(article['code1'])+'_'+str(article['code2']))
@@ -331,18 +323,18 @@ def main():
     else:
         # Terminate the whole process
         return
-    
+
     # Write article info to CSV sorted by timestamp
     article_df.drop_duplicates(inplace=True)
     article_df.sort_values(by=['DateTime'], ascending=False, inplace=True)
     article_df.to_csv(os.path.join(output_path, 'Article List.csv'), encoding='utf_8_sig', index=False)
-    
+
     # Write invalid article info to CSV sorted by timestamp if any
     if not invalid_df.empty:
         invalid_df.drop_duplicates(inplace=True)
         invalid_df.sort_values(by=['DateTime'], ascending=False, inplace=True)
         invalid_df.to_csv(os.path.join(output_path, 'Invalid Article List.csv'), encoding='utf_8_sig', index=False)
-    
+
     print('===================================')
     print('Crawling finished.')
     print('Number of articles retrieved: %d' % (len(article_df.index)))
