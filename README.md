@@ -18,7 +18,7 @@ Crawl article information from PTT - one of the largest internet forums in Taiwa
     └── ...
 
 ### Article List Content
-![CSV Header](https://github.com/andy2167565/PTT-Scraper/blob/493c30004d0a75fad1b14a172dfd3f7cd780a016/configFile/Article%20List%20Header.PNG)
+![CSV Header](https://github.com/andy2167565/PTT-Scraper/blob/000323aaa06221ff12232b8fabc12938398ba025/configFile/Article%20List%20Header.JPG)
 
 ## How to Execute
 ### Install packages
