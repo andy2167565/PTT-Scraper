@@ -66,7 +66,18 @@ Crawl article information from PTT - one of the largest internet forums in Taiwa
 
 ## Outputs
 ### Article List Content
-![CSV Header](https://github.com/andy2167565/PTT-Scraper/blob/000323aaa06221ff12232b8fabc12938398ba025/configFile/Article%20List%20Header.JPG)
+* ___Title___
+* ___Author___
+* ___DateTime___: Posting time of the article
+* ___IP___
+* ___Country___
+* ___URL___
+* ___TimeStamp___: Timestamp of posting time
+* ___RandomCode___: Hexadecimal number for each article
+* ___ArticleCode___: Unique code for each article, generated from [TimeStamp and RandomCode](https://www.ptt.cc/bbs/PttEarnMoney/M.1566319802.A.35E.html)
+* ___UpvoteCount___: Number of upvotes
+* ___NeutralCount___: Number of neutral comments
+* ___DownvoteCount___: Number of downvotes
 
 ## Logic Flow
 1.	Execute ```ptt_scraper.py```
