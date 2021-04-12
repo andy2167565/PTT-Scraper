@@ -42,13 +42,13 @@ Crawl article information from PTT - one of the largest internet forums in Taiwa
         <td>start_date</td>
         <td>Define start date to extract the data. Specified start_date is included.</td>
         <td>No</td>
-        <td>2021-01-01</td>
+        <td>2021-01-01 10:30:05</td>
     </tr>
     <tr>
         <td>end_date</td>
         <td>Define end date to extract the data. Specified end_date is <strong><i>NOT</i></strong> included.</td>
         <td>No</td>
-        <td>2021-01-01</td>
+        <td>2021-01-01 21:45:10</td>
     </tr>
     <tr>
         <td>keyword</td>
