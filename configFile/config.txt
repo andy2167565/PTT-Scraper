@@ -5,9 +5,9 @@ API_KEY=<YOUR_API_KEY>
 
 # Optional
 # Specified start_date is included
-start_date=yyyy-mm-dd
+start_date=yyyy-mm-dd HH:MM:SS
 # Specified end_date is NOT included
-end_date=yyyy-mm-dd
+end_date=yyyy-mm-dd HH:MM:SS
 # keyword is used for searching title
 keyword=<YOUR_KEYWORD>
 # Search for articles published by specified author
