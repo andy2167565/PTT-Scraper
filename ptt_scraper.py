@@ -19,13 +19,13 @@ with open(os.path.join(script_path, 'configFile', 'config.txt'), encoding='utf-8
     config = {i.split("=")[0]: i.split("=")[1].replace("\n", "") for i in config if '#' not in i and i != '\n'}
 
 try:
-    start_date = datetime.strptime(config['start_date'], '%Y-%m-%d')
+    start_date = datetime.strptime(config['start_date'], '%Y-%m-%d %H:%M:%S')
 except:
     start_date = None
 
 # Default is set to today
 try:
-    end_date = datetime.strptime(config['end_date'], '%Y-%m-%d')
+    end_date = datetime.strptime(config['end_date'], '%Y-%m-%d %H:%M:%S')
 except:
     end_date = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
 
