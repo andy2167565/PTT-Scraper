@@ -178,7 +178,7 @@ def save(img_urls, img_urls_2, img_urls_3, img_urls_4, title):
                 if not img_url.endswith('.jpg') and not img_url.endswith('.png') and not img_url.endswith('.gif'):
                     img_url += '.jpg'
                 #fname = img_url.split('/')[-1]
-                urllib.request.urlretrieve(img_url, os.path.join(filepath, dname+'_'+str(count)+'.jpg'))
+                urllib.request.urlretrieve(img_url, os.path.join(filepath, dname+'_'+str(count)+img_url[-4:]))
                 count += 1
         except Exception as e:
             print(e)
@@ -194,7 +194,7 @@ def save(img_urls, img_urls_2, img_urls_3, img_urls_4, title):
                 if not img_url.endswith('.jpg') and not img_url.endswith('.png') and not img_url.endswith('.gif'):
                     img_url += '.jpg'
                 #fname = img_url.split('/')[-1]
-                urllib.request.urlretrieve(img_url, os.path.join(filepath, dname+'_'+str(count)+'.jpg'))
+                urllib.request.urlretrieve(img_url, os.path.join(filepath, dname+'_'+str(count)+img_url[-4:]))
                 count += 1
         except Exception as e:
             print(e)
@@ -210,7 +210,7 @@ def save(img_urls, img_urls_2, img_urls_3, img_urls_4, title):
                 if not img_url.endswith('.jpg') and not img_url.endswith('.png') and not img_url.endswith('.gif'):
                     img_url += '.jpg'
                 #fname = img_url.split('/')[-2] + '-' + img_url.split('/')[-1]
-                urllib.request.urlretrieve(img_url, os.path.join(filepath, dname+'_'+str(count)+'.jpg'))
+                urllib.request.urlretrieve(img_url, os.path.join(filepath, dname+'_'+str(count)+img_url[-4:]))
                 count += 1
         except Exception as e:
             print(e)
