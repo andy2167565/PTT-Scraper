@@ -300,9 +300,12 @@ def main():
                                                      article['code1'], '"'+article['code2']+'"', article['article_code'], upvote_count, neutral_count, downvote_count]
                     article_count += 1
 
-                    # Save contents and messages to text file
+                    # Save header, contents and messages to text file
                     all_text = soup.find(id='main-content').text
-                    content = '\n'.join(list(filter(None, all_text.split('\n')[1:])))
+                    dt_header = datetime.strptime(article['dt'], '%Y/%m/%d %H:%M:%S')
+                    header = ['作者：'+article['author'], '標題：'+article['title'], '時間：'+dt_header.strftime('%a %b %d %H:%M:%S %Y'), '\n']
+                    header.extend(list(filter(None, all_text.split('\n')[1:])))
+                    content = '\n'.join(header)
                     with open(os.path.join(content_path, article['code1']+'_'+article['code2']+'.txt'), 'w', encoding='utf-8') as text:
                         text.write(content)
 
